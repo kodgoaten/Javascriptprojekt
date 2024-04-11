@@ -1,20 +1,19 @@
 let canvas = document.getElementById("myCanvas");
-canvas.width = window.innerWidth - 10;
-canvas.height = window.innerHeight - 10; // -10 eftersom canvasen blir liiite för stor annars ¯\_(ツ)_/¯
-
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight; // -10 eftersom canvasen blir liiite för stor annars ¯\_(ツ)_/¯
+const img = new Image();
+img.src = "spr_bike2man_0.png";
 let context = canvas.getContext("2d");
 
 //Ett objekt som håller information om en ruta som ska ritas
 let square = {
-  color: "red",
   width: 80,
-  height: 30,
+  height: 80,
   posX: 50,
   posY: 50,
-  speed: 5,
+  speed: 10,
   speedX: 0, // Egenskaper för att styra hastigheten på rutan
   speedY: 0,
-  rotation: 0,
 };
 
 document.onkeydown = function (e) {
@@ -22,8 +21,7 @@ document.onkeydown = function (e) {
   const key = e.key;
   switch (key) {
     case "w":
-      square.rotation -= 5; // Rotate counter-clockwise by reducing rotation angle
-      rotateObject(square.rotation);
+      square.speedY = -square.speed;
       break;
     case "a":
       square.speedX = -square.speed;
@@ -41,11 +39,8 @@ document.onkeyup = function (e) {
   console.log(e);
   const key = e.key;
   switch (key) {
-    case "Shift":
-
-      break;
     case "w":
-      
+      square.speedY = 0;
       break;
     case "a":
       square.speedX = 0;
@@ -59,14 +54,15 @@ document.onkeyup = function (e) {
   }
 };
 
-function rotateObject(degrees) {
-  let square = document.getElementById('square');
-  square.style.transform = 'rotate(' + degrees + 'deg)';
-}
+
 //Ritar ut en ruta med sin färg, på den position den befinner sig.
-function drawRect(rect) {
-  context.fillStyle = rect.color;
-  context.fillRect(rect.posX, rect.posY, rect.width, rect.height);
+
+
+
+function draw(rect) {
+  context.drawImage(img, rect.posX, rect.posY, rect.width, rect.height);
+
+
 }
 
 //Uppdaterar postionen på en ruta, beror av speedX och speedY
@@ -84,7 +80,6 @@ function updatePosition(rect) {
   } else if (rect.posX <= 0) {
     // Vänd på hastigheten i y-led
     rect.speedX = -rect.speedX;
-    rect.speedY = -2;
   }
 
   rect.posX += rect.speedX;
@@ -107,8 +102,8 @@ function ground() {
 function update() {
   updatePosition(square);
   clearCanvas();
-  drawRect(square);
   ground();
+  draw(square);
   requestAnimationFrame(update); //Kör den här funktionen igen. Det här skapar en "oändlig loop".
 }
 
