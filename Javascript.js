@@ -6,13 +6,11 @@ img.src = "spr_bike2man_0.png";
 let context = canvas.getContext("2d");
 
 //Ett objekt som håller information om en ruta som ska ritas
-let square = {
+let bike = {
   width: 80,
   height: 80,
-  posX: 50,
+  posX: canvas.width/2 - 40,
   posY: 50,
-  speed: 10,
-  speedX: 0, // Egenskaper för att styra hastigheten på rutan
   speedY: 0,
 };
 
@@ -20,18 +18,15 @@ document.onkeydown = function (e) {
   console.log(e);
   const key = e.key;
   switch (key) {
-    case "w":
-      square.speedY = -square.speed;
-      break;
+    
     case "a":
-      square.speedX = -square.speed;
+      t-= 10;
       break;
-    case "s":
-      square.speedY = square.speed;
-      break;
+    
     case "d":
-      square.speedX = square.speed;
+      t += 10;
       break;
+      
   }
 };
 
@@ -39,23 +34,19 @@ document.onkeyup = function (e) {
   console.log(e);
   const key = e.key;
   switch (key) {
-    case "w":
-      square.speedY = 0;
-      break;
+    
     case "a":
-      square.speedX = 0;
+      t -= 0;
       break;
-    case "s":
-      square.speedY = 0;
-      break;
+    
     case "d":
-      square.speedX = 0;
+      t += 0;
       break;
   }
 };
 
 
-//Ritar ut en ruta med sin färg, på den position den befinner sig.
+
 
 
 
@@ -67,25 +58,17 @@ function draw(rect) {
 
 //Uppdaterar postionen på en ruta, beror av speedX och speedY
 function updatePosition(rect) {
-  // Kontrollera om rutan kolliderar med nedre kanten av canvasen.
-  if (rect.posY + rect.height >= canvas.height - 200) {
-    // Vänd på hastigheten i y-led
-    rect.speedY = 0;
-  } else if (rect.posY <= 0) {
-    rect.speedY = -rect.speedY;
+  let PPh =  canvas.height - noise(t+(rect.posX+40))* 0.55
+  if (PPh-80 > rect.posY){
+    rect.speedY += 0.2
   }
-  if (rect.posX + rect.width >= canvas.width) {
-    // Vänd på hastigheten i y-led
-    rect.speedX = -rect.speedX;
-  } else if (rect.posX <= 0) {
-    // Vänd på hastigheten i y-led
-    rect.speedX = -rect.speedX;
+  else {
+    rect.speedY -= rect.posY -(PPh-80)
+    rect.posY = PPh-80
   }
-
-  rect.posX += rect.speedX;
-  rect.posY += rect.speedY;
-  //   console.log(rect)
-}
+  rect.posY += rect.speedY
+  }
+  
 
 // Denna funktion "tömmer" canvasen genom att måla den svart.
 function clearCanvas() {
@@ -93,17 +76,39 @@ function clearCanvas() {
   context.fillRect(0, 0, canvas.width, canvas.height);
 }
 
-function ground() {
-  context.fillStyle = "black";
-  context.fillRect(0, canvas.height, canvas.width, -200);
+
+let perm = [];
+while (perm.length < 255){
+  while(perm.includes(val = Math.floor(Math.random()*255)));
+  perm.push(val)
+}
+  let lerp = (a,b,t) => a + (b-a) * (1-Math.cos(t*Math.PI))/2;
+  let noise = x=>{
+    x = x * 0.01 % 255;
+    return lerp(perm[Math.floor(x)], perm[Math.ceil(x)], x - Math.floor(x));
+  }
+
+  let t = 0
+function groundLoop() {
+
+  context.fillStyle = "black"
+  context.beginPath()
+  context.moveTo(0, canvas.height)
+  for (let i = 0; i < canvas.width; i++)
+    context.lineTo(i, canvas.height - noise(t+i)* 0.55)
+
+  context.lineTo(canvas.width, canvas.height)
+  context.fill()
+
+
 }
 
 // Det här är huvudfunktionen som kör funktioner för att animeringen ska fungera.
 function update() {
-  updatePosition(square);
+  updatePosition(bike);
   clearCanvas();
-  ground();
-  draw(square);
+  groundLoop();
+  draw(bike);
   requestAnimationFrame(update); //Kör den här funktionen igen. Det här skapar en "oändlig loop".
 }
 
