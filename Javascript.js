@@ -11,15 +11,17 @@ let bike = {
   posX: canvas.width / 2 - 40,
   posY: 200,
   speedY: 0,
+  rot: 0,
+  speedR: 0,
 };
 let acc = 1;
+let drive = false;
 let dPress = false;
-let groundDPress = false;
 let grounded = false;
-let dAcc = 1;
 
 function draw(rect) {
   context.drawImage(img, rect.posX, rect.posY, rect.width, rect.height);
+  
 }
 
 document.onkeydown = function (e) {
@@ -27,15 +29,15 @@ document.onkeydown = function (e) {
   switch (key) {
     case "a":
       if (t >= 0) {
-        t -= 10;
+        t -= 1;
       } else {
         t += 0;
       }
       break;
 
     case "d":
+      drive = true;
       dPress = true;
-      groundDPress = true;
       break;
   }
 };
@@ -48,64 +50,69 @@ document.onkeyup = function (e) {
       break;
 
     case "d":
-      groundDPress = false;
+      dPress = false;
       if (grounded == false) {
-        dPress = true;
+        drive = true;
         break;
       }
   }
 };
 
 function bikeMovement() {
-  if (dPress == true) {
+  if (drive == true) {
     t += acc;
   }
-  if (grounded == true && groundDPress == false) {
-    dPress = false;
+  if (grounded == true && dPress == false) {
+    drive = false;
   }
 
-  if (dPress == false) {
+  if (drive == false) {
     t += acc - 1;
   }
 
-  if (groundDPress == true && grounded == true && acc < 10) {
+  if (dPress == true && grounded == true && acc < 10) {
     acc *= 1.05;
     console.log(acc);
   }
-  if (groundDPress == false && grounded == true && acc > 1) {
+  if (dPress == false && grounded == true && acc > 1) {
     acc /= 1.05;
     console.log(acc);
-  }
+  } //Har inte denna if-sats i if (drive == false sats) eftersom den ger olika physics till den här
 }
 
-//Uppdaterar postionen på en ruta, beror av speedX och speedY
 function updatePosition(rect) {
-  let PPh = canvas.height - noise(t + (rect.posX + 40)) * 0.55;
+  let PPh1 = canvas.height - noise(t + rect.posX) * 0.55;
+  let PPh2 = canvas.height - noise(t + (rect.posX + 15)) * 0.55;
 
-  if (PPh - 80 > rect.posY) {
+  let dawg = 0;
+  if (PPh1 - 78 > rect.posY) {
     rect.speedY += 0.2;
   } else {
-    rect.speedY -= (rect.posY - (PPh - 80)) / 2;
-    rect.posY = PPh - 80;
+    rect.speedY -= (rect.posY - (PPh1 - 78)) / 2;
+    rect.posY = PPh1 - 78;
+    dawg = 1;
   }
   if (rect.posY < -80) {
     rect.posY = -79;
     rect.speedY = 0;
   }
-  if (rect.posY >= canvas.height) {
-    rect.posY = 0;
-  }
-
   rect.posY += rect.speedY;
 
-  if (PPh - 85 <= rect.posY) {
+  if (PPh1 - 82 <= rect.posY) {
     grounded = true;
   } else {
     grounded = false;
   }
+
+  let angle = Math.atan2((PPh2 - 78) - rect.posY, (rect.posX + 15) - rect.posX);
+  console.log(angle)
+  rect.rot = angle;
+  context.save()
+  context.translate(rect.posX, rect.posY)
+  context.rotate(rect.rot);
+  context.restore()
 }
 
-// Denna funktion "tömmer" canvasen genom att måla den svart.
 function clearCanvas() {
   context.fillStyle = "white";
   context.fillRect(0, 0, canvas.width, canvas.height);
@@ -135,17 +142,17 @@ function groundLoop() {
 }
 
 function scorefunc() {
-  let score = document.getElementById("myScore");
   context.fillStyle = "black";
-  context.fillText(`score: ${t / 10}`, 50, 50);
+  context.font = "30px Arial";
+  context.fillText(`score: ${Math.round(t / 100)}`, 50, 50);
 }
 
 function update() {
   bikeMovement();
-  updatePosition(bike);
   clearCanvas();
   groundLoop();
   draw(bike);
+  updatePosition(bike);
   requestAnimationFrame(update);
   scorefunc();
 
