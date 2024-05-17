@@ -3,13 +3,17 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 const img = new Image();
 img.src = "spr_bike2man_0.png";
+const img2 = new Image();
+img2.src = "spr_bike2man_045gr.png"
+const BackImg = new Image()
+BackImg.src ="skybackground.jpg"
 let context = canvas.getContext("2d");
 
 let bike = {
   width: 80,
   height: 80,
-  posX: canvas.width / 2 - 40,
-  posY: 200,
+  posX: canvas.width / 2,
+  posY: 0,
   speedY: 0,
   rot: 0,
   speedR: 0,
@@ -17,28 +21,30 @@ let bike = {
 let acc = 1;
 let drive = false;
 let dPress = false;
+let aPress = false
 let grounded = false;
+let dead = false
 
-function draw(rect) {
-  context.drawImage(img, rect.posX, rect.posY, rect.width, rect.height);
-  
-}
 
 document.onkeydown = function (e) {
   const key = e.key;
   switch (key) {
     case "a":
-      if (t >= 0) {
-        t -= 1;
-      } else {
-        t += 0;
-      }
+      aPress = true
+      
       break;
 
     case "d":
+      if (!dead){
       drive = true;
       dPress = true;
+      }
       break;
+    case " ":
+      if (dead){
+        window.location.reload()
+      }
+      break
   }
 };
 
@@ -47,6 +53,7 @@ document.onkeyup = function (e) {
   switch (key) {
     case "a":
       t -= 0;
+      aPress = false
       break;
 
     case "d":
@@ -77,20 +84,20 @@ function bikeMovement() {
   if (dPress == false && grounded == true && acc > 1) {
     acc /= 1.05;
     console.log(acc);
-  } //Har inte denna if-sats i if (drive == false sats) eftersom den ger olika physics till den här
+  } //Har inte denna if-sats i if (drive == false sats) eftersom den ger andra physics till den här
 }
 
 function updatePosition(rect) {
   let PPh1 = canvas.height - noise(t + rect.posX) * 0.55;
-  let PPh2 = canvas.height - noise(t + (rect.posX + 15)) * 0.55;
+  let PPh2 = canvas.height - noise(t + (rect.posX + 40)) * 0.55;
 
-  let dawg = 0;
-  if (PPh1 - 78 > rect.posY) {
+  let onGround = 0;
+  if (PPh1 - 40 > rect.posY) {
     rect.speedY += 0.2;
   } else {
-    rect.speedY -= (rect.posY - (PPh1 - 78)) / 2;
-    rect.posY = PPh1 - 78;
-    dawg = 1;
+    rect.speedY -= (rect.posY - (PPh1 - 40)) / 2;
+    rect.posY = PPh1 - 40;
+    onGround = 1;
   }
   if (rect.posY < -80) {
     rect.posY = -79;
@@ -98,24 +105,53 @@ function updatePosition(rect) {
   }
   rect.posY += rect.speedY;
 
-  if (PPh1 - 82 <= rect.posY) {
+  if (PPh1 - 42 <= rect.posY) {
     grounded = true;
   } else {
     grounded = false;
   }
 
-  let angle = Math.atan2((PPh2 - 78) - rect.posY, (rect.posX + 15) - rect.posX);
-  console.log(angle)
-  rect.rot = angle;
+  if(dead || onGround && Math.abs(rect.rot) > (Math.PI/2)+0.1){
+    dead = true
+    speedR = 0
+    rect.rot = Math.PI
+    console.log(speedR)
+    context.fillStyle = "black";
+    context.font = "30px Times new roman";
+    context.fillText("You Have Died", canvas.width/2-90, canvas.height/2-120)
+    context.fillText("Press Space To Restart",canvas.width/2-130, canvas.height/2-75);
+  }
+
+  let angle = Math.atan2((PPh2 - 40) - rect.posY, (rect.posX + 40) - rect.posX);
+  
+  if (onGround == 1 && dead == false){
+  rect.rot -= (rect.rot - angle) * 0.5
+  rect.speedR = rect.speedR - (angle - rect.rot)
+  }
+  
+  if (dPress == true && grounded == false){
+    rect.speedR -= acc *0.01
+  }
+  if (aPress == true && grounded == false){
+    rect.speedR += acc *0.01
+  }
+  rect.rot -= rect.speedR * 0.03
+  if(rect.rot > Math.PI) rect.rot = -Math.PI
+  if(rect.rot < -Math.PI) rect.rot = Math.PI
+
+
+  
   context.save()
   context.translate(rect.posX, rect.posY)
-  context.rotate(rect.rot);
+  context.rotate(rect.rot)
+  context.drawImage(img, -rect.width / 2, -rect.height / 2, rect.width, rect.height);
   context.restore()
+  
+  
 }
 
 function clearCanvas() {
-  context.fillStyle = "white";
-  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.drawImage(BackImg,0, 0, canvas.width, canvas.height);
 }
 
 let perm = [];
@@ -131,7 +167,7 @@ let noise = (x) => {
 
 let t = 0;
 function groundLoop() {
-  context.fillStyle = "black";
+  context.fillStyle = "sienna";
   context.beginPath();
   context.moveTo(0, canvas.height);
   for (let i = 0; i < canvas.width; i++)
@@ -144,14 +180,13 @@ function groundLoop() {
 function scorefunc() {
   context.fillStyle = "black";
   context.font = "30px Arial";
-  context.fillText(`score: ${Math.round(t / 100)}`, 50, 50);
+  context.fillText(`Distance: ${Math.round(t / 100)}m`, 50, 50);
 }
 
 function update() {
   bikeMovement();
   clearCanvas();
   groundLoop();
-  draw(bike);
   updatePosition(bike);
   requestAnimationFrame(update);
   scorefunc();
