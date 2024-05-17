@@ -66,7 +66,7 @@ document.onkeyup = function (e) {
 };
 
 function bikeMovement() {
-  if (drive == true) {
+  if (drive == true && dead == false) {
     t += acc;
   }
   if (grounded == true && dPress == false) {
