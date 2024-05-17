@@ -79,11 +79,9 @@ function bikeMovement() {
 
   if (dPress == true && grounded == true && acc < 10) {
     acc *= 1.05;
-    console.log(acc);
   }
   if (dPress == false && grounded == true && acc > 1) {
     acc /= 1.05;
-    console.log(acc);
   } //Har inte denna if-sats i if (drive == false sats) eftersom den ger andra physics till den här
 }
 
@@ -115,7 +113,6 @@ function updatePosition(rect) {
     dead = true
     speedR = 0
     rect.rot = Math.PI
-    console.log(speedR)
     context.fillStyle = "black";
     context.font = "30px Times new roman";
     context.fillText("You Have Died", canvas.width/2-90, canvas.height/2-120)
